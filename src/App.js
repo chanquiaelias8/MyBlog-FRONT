@@ -1,25 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import ArticleForm from './components/ArticleForm/ArticleForm';
+import ArticleList from './components/ArticleList/ArticleList';
+import { fetchArticles, createArticle, updateArticle } from './services/Api';
+import '../src/assets/styles/App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    const [articles, setArticles] = useState([]);
+    const [currentArticle, setCurrentArticle] = useState(null);
+
+    useEffect(() => {
+        fetchArticles().then(data => setArticles(data));
+    }, []);
+
+    const saveArticle = (article) => {
+        if (article.id) {
+            updateArticle(article).then(updatedArticle => {
+                setArticles(articles.map(a => (a.id === updatedArticle.id ? updatedArticle : a)));
+                setCurrentArticle(null);
+            });
+        } else {
+            createArticle(article).then(newArticle => setArticles([...articles, newArticle]));
+        }
+    };
+
+    const editArticle = (article) => {
+        setCurrentArticle(article);
+    };
+
+    return (
+        <div className="App">
+            <h1>My Blog</h1>
+            <ArticleForm 
+                onSubmit={saveArticle} 
+                currentArticle={currentArticle} 
+                clearCurrentArticle={() => setCurrentArticle(null)}
+            />
+            <ArticleList 
+                articles={articles} 
+                onEdit={editArticle} 
+            />
+        </div>
+    );
+};
 
 export default App;
